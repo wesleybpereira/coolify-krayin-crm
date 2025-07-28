@@ -87,7 +87,13 @@ O Docker Compose está configurado para:
 3. Faça upload do `docker-compose.yml`
 4. Faça upload do `mysql-init.sql`
 5. Configure as variáveis de ambiente listadas acima
-6. Clique em "Deploy"
+6. **⚠️ IMPORTANTE**: Configure domínio APENAS para o serviço `krayin` (aplicação principal)
+7. Clique em "Deploy"
+
+### 🌐 Configuração de domínios
+- ✅ **`krayin`** → Configure seu domínio (exemplo: `crm.seudominio.com`)
+- ❌ **`krayin-init`** → NÃO configure domínio (é só inicialização)
+- ❌ **`krayin-db`** → NÃO configure domínio (banco interno)
 
 ## 🔍 Verificação pós-deploy
 

@@ -5,6 +5,8 @@ services:
     image: 'mysql:8.0'
     container_name: krayin-db
     restart: unless-stopped
+    labels:
+      - "coolify.exclude=true" 
     environment:
       MYSQL_ROOT_PASSWORD: ${MYSQL_ROOT_PASSWORD:-RV2yYmv6mxKzIAv}
       MYSQL_DATABASE: ${DB_DATABASE:-krayin}
@@ -30,6 +32,9 @@ services:
   krayin-init:
     image: 'webkul/krayin:v2.1.2-https'
     container_name: krayin-init
+    labels:
+      - "coolify.exclude=true" 
+    # NOTA: Este serviço é apenas para inicialização - SEM portas expostas
     volumes:
       - krayin_storage:/var/www/html/laravel-crm
     environment:
@@ -109,6 +114,7 @@ services:
     image: 'webkul/krayin:v2.1.2-https'
     container_name: krayin-app
     restart: unless-stopped
+    # NOTA: Este é o serviço PRINCIPAL - ÚNICO que deve ter domínio no Coolify
     ports:
       - '${APP_PORT:-8082}:80'
     volumes:
