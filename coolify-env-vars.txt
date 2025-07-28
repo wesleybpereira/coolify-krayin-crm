@@ -1,19 +1,20 @@
 # Variáveis para Coolify - Krayin CRM
+# ⚠️ ALTERE os valores marcados com "ALTERAR" abaixo
 
-# === OBRIGATÓRIAS ===
-APP_KEY=base64:dTTkWP2vgh7rs8CtWcw47tdCd7gpMEggdZ5WRwLlHAY=
-APP_URL=https://crm.dachdigital.com.br
-DB_PASSWORD=pefvon-wuMcoz-8qupqe
-MYSQL_ROOT_PASSWORD=RV2yYmv6mxKzIAv
+# === OBRIGATÓRIAS - ALTERAR ESTES VALORES ===
+APP_KEY=base64:SUA_CHAVE_LARAVEL_AQUI_32_CARACTERES=
+APP_URL=https://seu-dominio.com.br
+DB_PASSWORD=SuaSenhaSegura123
+MYSQL_ROOT_PASSWORD=OutraSenhaRoot456
 
-# === APLICAÇÃO ===
+# === APLICAÇÃO (PADRÃO - NÃO ALTERAR) ===
 APP_ENV=production
 APP_DEBUG=false
 DEBUGBAR_ENABLED=false
 APP_TIMEZONE=America/Sao_Paulo
 APP_CIPHER=AES-256-CBC
 
-# === BANCO DE DADOS (INTERNO) ===
+# === BANCO DE DADOS INTERNO (PADRÃO - NÃO ALTERAR) ===
 DB_CONNECTION=mysql
 DB_HOST=localhost
 DB_PORT=3306
@@ -21,18 +22,23 @@ DB_DATABASE=krayin
 DB_USERNAME=krayin
 MYSQL_DATABASE=krayin
 MYSQL_USER=krayin
-MYSQL_PASSWORD=pefvon-wuMcoz-8qupqe
+MYSQL_PASSWORD=SuaSenhaSegura123
 
-# === CACHE E SESSÃO ===
+# === CACHE E SESSÃO (PADRÃO - NÃO ALTERAR) ===
 CACHE_DRIVER=file
 SESSION_DRIVER=file
 QUEUE_CONNECTION=database
 
-# === LOGS ===
+# === LOGS (PADRÃO - NÃO ALTERAR) ===
 LOG_CHANNEL=stack
 LOG_LEVEL=error
 
-# === PORTA (OPCIONAL) ===
+# === PORTA (OPCIONAL - PODE ALTERAR SE NECESSÁRIO) ===
 APP_PORT=8082
 
-# Gere APP_KEY em: https://generate-random.org/laravel-key-generator
+# === INSTRUÇÕES ===
+# 1. OBRIGATÓRIO: Gere APP_KEY em https://generate-random.org/laravel-key-generator
+# 2. OBRIGATÓRIO: Substitua "seu-dominio.com.br" pelo seu domínio real
+# 3. OBRIGATÓRIO: Mude "SuaSenhaSegura123" para uma senha forte (min. 12 chars)
+# 4. OBRIGATÓRIO: Mude "OutraSenhaRoot456" para outra senha forte diferente
+# 5. IMPORTANTE: Use a mesma senha em DB_PASSWORD e MYSQL_PASSWORD
