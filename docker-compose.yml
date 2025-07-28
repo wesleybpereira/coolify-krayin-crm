@@ -115,6 +115,9 @@ services:
     container_name: krayin-app
     restart: unless-stopped
     # NOTA: Este é o serviço PRINCIPAL - ÚNICO que deve ter domínio no Coolify
+    labels:
+      - "coolify.main=true"      # Marca como serviço principal
+      - "coolify.name=Krayin CRM" # Nome amigável na UI
     ports:
       - '${APP_PORT:-8082}:80'
     volumes:
