@@ -21,13 +21,17 @@ O container `krayin` estava iniciando um MySQL interno (conflito) quando deveria
 Após o redeploy, os logs do container `krayin` devem mostrar:
 ```
 Starting Krayin CRM with external database only...
-Stopping internal MySQL service...
 Waiting for external database...
 Testing external database connection...
 External database connection successful
 Setting up permissions...
-Apache web server running with external database
+Starting Apache directly without supervisor...
 ```
+
+### 🚨 **Atualizações importantes:**
+- **v1**: Tentativa com supervisord-web-only.conf (erro de mount)
+- **v2**: Uso de supervisorctl stop mysql (MySQL ainda iniciava)
+- **v3**: ✅ **ATUAL** - Apache direto sem supervisor (solução final)
 
 ### 5. Se ainda não funcionar:
 1. Remova os volumes no Coolify
