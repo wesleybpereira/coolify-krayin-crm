@@ -70,8 +70,20 @@ services:
         echo 'Waiting for database...' &&
         sleep 30 &&
         
-        # Parar MySQL interno se estiver rodando
+        # Parar todos os processos MySQL internos
+        echo 'Stopping internal MySQL processes...' &&
+        pkill -f mysql 2>/dev/null || true &&
+        pkill -f mysqld 2>/dev/null || true &&
         supervisorctl stop mysql 2>/dev/null || true &&
+        supervisorctl stop mysqld 2>/dev/null || true &&
+        service mysql stop 2>/dev/null || true &&
+        sleep 5 &&
+        
+        # Verificar se MySQL interno ainda está rodando
+        if pgrep -f mysql > /dev/null; then
+          echo 'WARNING: MySQL internal process still running' &&
+          pkill -9 -f mysql 2>/dev/null || true
+        fi &&
         
         # Verificar conexão com banco externo
         echo 'Testing database connection...' &&
@@ -86,6 +98,7 @@ services:
         ' &&
         
         # Executar migrações se necessário
+        echo 'Running migrations...' &&
         php /var/www/html/laravel-crm/artisan migrate --force &&
         
         # Configurar permissões
