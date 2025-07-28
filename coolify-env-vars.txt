@@ -14,9 +14,9 @@ DEBUGBAR_ENABLED=false
 APP_TIMEZONE=America/Sao_Paulo
 APP_CIPHER=AES-256-CBC
 
-# === BANCO DE DADOS INTERNO (PADRÃO - NÃO ALTERAR) ===
+# === BANCO DE DADOS EXTERNO (PADRÃO - NÃO ALTERAR) ===
 DB_CONNECTION=mysql
-DB_HOST=localhost
+DB_HOST=krayin-db
 DB_PORT=3306
 DB_DATABASE=krayin
 DB_USERNAME=krayin
@@ -41,4 +41,14 @@ APP_PORT=8082
 # 2. OBRIGATÓRIO: Substitua "seu-dominio.com.br" pelo seu domínio real
 # 3. OBRIGATÓRIO: Mude "SuaSenhaSegura123" para uma senha forte (min. 12 chars)
 # 4. OBRIGATÓRIO: Mude "OutraSenhaRoot456" para outra senha forte diferente
-# 5. IMPORTANTE: Use a mesma senha em DB_PASSWORD e MYSQL_PASSWORD
+# 5. ⚠️ CRÍTICO: DB_PASSWORD e MYSQL_PASSWORD devem ter EXATAMENTE a mesma senha!
+#    - DB_PASSWORD: senha que o Laravel usa para conectar
+#    - MYSQL_PASSWORD: senha que o MySQL cria para o usuário 'krayin'
+#    - Se forem diferentes, dará erro de autenticação!
+#
+# === TROUBLESHOOTING ===
+# ❌ Erro "Access denied" após mudar senhas?
+# 1. PARE a aplicação no Coolify
+# 2. VÁ em "Storages/Volumes" 
+# 3. DELETE o volume "krayin_db_data"
+# 4. REDEPLOY - MySQL será recriado com novas senhas

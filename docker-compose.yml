@@ -12,6 +12,8 @@ services:
       MYSQL_DATABASE: krayin
       MYSQL_USER: krayin
       MYSQL_PASSWORD: ${DB_PASSWORD}
+      # Forçar recriação quando senhas mudarem (opcional)
+      MYSQL_INITDB_SKIP_TZINFO: 1
     volumes:
       - krayin_db_data:/var/lib/mysql
     command: --default-authentication-plugin=mysql_native_password --character-set-server=utf8mb4 --collation-server=utf8mb4_unicode_ci
@@ -73,8 +75,26 @@ services:
         # Parar MySQL interno se estiver rodando
         supervisorctl stop mysql 2>/dev/null || true &&
         
-        # Verificar conexão com banco externo
-        echo 'Testing database connection...' &&
+        # Reset de senha se necessário (preserva dados)
+        echo 'Checking database connection...' &&
+        if ! timeout 10 php /var/www/html/laravel-crm/artisan tinker --execute='
+          try {
+            DB::connection()->getPdo();
+            echo \"Connection OK\n\";
+          } catch (Exception \$$e) {
+            echo \"Connection failed, may need password reset\n\";
+            exit(1);
+          }
+        '; then
+          echo 'Connection failed - trying to reset MySQL password...' &&
+          docker exec krayin-db mysql -u root -p\${MYSQL_ROOT_PASSWORD} -e \"
+            ALTER USER 'krayin'@'%' IDENTIFIED BY '\${DB_PASSWORD}';
+            FLUSH PRIVILEGES;
+          \" 2>/dev/null || echo 'Password reset attempted'
+        fi &&
+        
+        # Verificar conexão novamente
+        echo 'Testing final connection...' &&
         timeout 30 php /var/www/html/laravel-crm/artisan tinker --execute='
           try {
             DB::connection()->getPdo();
