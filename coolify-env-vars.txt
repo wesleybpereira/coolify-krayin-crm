@@ -1,35 +1,9 @@
-# Variáveis de ambiente para Coolify - Krayin CRM (VERSÃO SIMPLIFICADA)
-# === SUBSTITUA OS VALORES DE EXEMPLO PELOS REAIS ===
+# Variáveis para Coolify - Krayin CRM
 
-# === OBRIGATÓRIAS - SUBSTITUA! ===
-APP_KEY=base64:GERE_UMA_CHAVE_LARAVEL_AQUI_COM_32_CARACTERES=
+# === OBRIGATÓRIAS ===
+APP_KEY=base64:GERE_UMA_CHAVE_LARAVEL_AQUI=
 APP_URL=https://seu-dominio.com.br
-DB_PASSWORD=SuaSenhaSeguraAqui123!
-MYSQL_ROOT_PASSWORD=OutraSenhaSeguraRoot456!
+DB_PASSWORD=SuaSenhaSegura123
+MYSQL_ROOT_PASSWORD=OutraSenhaSegura456
 
-# === CONFIGURAÇÃO DA APLICAÇÃO (OPCIONAIS) ===
-APP_ENV=production
-APP_DEBUG=false
-DEBUGBAR_ENABLED=false
-APP_TIMEZONE=America/Sao_Paulo
-APP_CIPHER=AES-256-CBC
-
-# === CACHE E SESSÃO (OPCIONAIS) ===
-CACHE_DRIVER=file
-SESSION_DRIVER=file
-QUEUE_CONNECTION=database
-
-# === LOGS (OPCIONAIS) ===
-LOG_CHANNEL=stack
-LOG_LEVEL=error
-
-# === REDE (OPCIONAL) ===
-APP_PORT=8082
-
-# === INSTRUÇÕES ===
-# 🎯 VERSÃO SIMPLIFICADA: Apenas 1 container com MySQL interno!
-# 1. Gere APP_KEY: https://generate-random.org/laravel-key-generator
-# 2. Use senhas com 16+ caracteres para DB_PASSWORD e MYSQL_ROOT_PASSWORD
-# 3. Substitua APP_URL pelo seu domínio real
-# 4. As demais variáveis são OPCIONAIS (têm valores padrão)
-# 5. Copie e cole cada linha na interface do Coolify
+# Gere APP_KEY em: https://generate-random.org/laravel-key-generator
