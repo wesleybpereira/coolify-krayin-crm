@@ -4,6 +4,7 @@
 
 - `docker-compose.yml` - Arquivo principal do Docker Compose
 - `mysql-init.sql` - Script de inicialização do banco de dados
+- `supervisord-web-only.conf` - Configuração do supervisor (apenas Apache, sem MySQL interno)
 - `.env` - Variáveis de ambiente (já existente)
 
 ## 🔧 Configuração no Coolify
@@ -24,7 +25,7 @@ openssl rand -base64 24
 ```
 
 ### 2. Upload dos arquivos
-- Faça upload do `docker-compose.yml` e `mysql-init.sql` para o seu projeto no Coolify
+- Faça upload do `docker-compose.yml`, `mysql-init.sql` e `supervisord-web-only.conf` para o seu projeto no Coolify
 
 ### 3. Variáveis de ambiente obrigatórias
 Configure estas variáveis na interface do Coolify:
@@ -86,9 +87,10 @@ O Docker Compose está configurado para:
 2. Selecione "Docker Compose"
 3. Faça upload do `docker-compose.yml`
 4. Faça upload do `mysql-init.sql`
-5. Configure as variáveis de ambiente listadas acima
-6. **⚠️ IMPORTANTE**: Configure domínio APENAS para o serviço `krayin` (aplicação principal)
-7. Clique em "Deploy"
+5. Faça upload do `supervisord-web-only.conf`
+6. Configure as variáveis de ambiente listadas acima
+7. **⚠️ IMPORTANTE**: Configure domínio APENAS para o serviço `krayin` (aplicação principal)
+8. Clique em "Deploy"
 
 ### 🌐 Configuração de domínios
 - ✅ **`krayin`** → Configure seu domínio (exemplo: `crm.seudominio.com`)
@@ -114,9 +116,11 @@ Após o deploy, verifique:
 - **Permissões corretas**: Script ajusta permissões automaticamente
 
 ### 🔧 Troubleshooting:
+- **"no available server"**: Indica que o MySQL interno estava conflitando. A configuração foi ajustada para usar apenas Apache
 - Se houver erro de conexão, verifique as variáveis `DB_*`
 - Se o debug aparecer, confirme `APP_DEBUG=false` e `DEBUGBAR_ENABLED=false`
 - Para reset completo, remova os volumes no Coolify e redeploy
+- **Container krayin sempre reiniciando**: Verifique se todos os 3 arquivos foram enviados (incluindo `supervisord-web-only.conf`)
 
 ## 📞 Suporte
 Em caso de problemas, verifique os logs de cada container no painel do Coolify.
