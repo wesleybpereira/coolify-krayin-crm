@@ -6,14 +6,12 @@ O container `krayin` estava iniciando um MySQL interno (conflito) quando deveria
 ## Solução implementada:
 
 ### 1. Arquivos atualizados:
-- ✅ `docker-compose.yml` - Comando customizado para usar apenas Apache
-- ✅ `supervisord-web-only.conf` - Configuração do supervisor sem MySQL interno
+- ✅ `docker-compose.yml` - Comando customizado para desabilitar MySQL interno via supervisorctl
 - ✅ `README.md` - Instruções atualizadas
 
 ### 2. No Coolify:
 1. **Substitua** o arquivo `docker-compose.yml` pelo novo
-2. **Adicione** o arquivo `supervisord-web-only.conf`
-3. **Redeploy** o projeto
+2. **Redeploy** o projeto (não precisa mais do arquivo supervisord-web-only.conf)
 
 ### 3. O que foi corrigido:
 - ❌ **Antes**: Container iniciava Apache + MySQL interno (conflito)
@@ -23,10 +21,12 @@ O container `krayin` estava iniciando um MySQL interno (conflito) quando deveria
 Após o redeploy, os logs do container `krayin` devem mostrar:
 ```
 Starting Krayin CRM with external database only...
+Stopping internal MySQL service...
+Waiting for external database...
 Testing external database connection...
 External database connection successful
 Setting up permissions...
-Starting web server (Apache only)...
+Apache web server running with external database
 ```
 
 ### 5. Se ainda não funcionar:

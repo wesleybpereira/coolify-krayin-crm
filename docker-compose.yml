@@ -123,7 +123,6 @@ services:
     volumes:
       - krayin_storage:/var/www/html/laravel-crm
       - krayin_uploads:/var/www/html/public/uploads
-      - ./supervisord-web-only.conf:/etc/supervisor/conf.d/supervisord.conf:ro
     environment:
       DB_CONNECTION: ${DB_CONNECTION:-mysql}
       DB_HOST: krayin-db
@@ -150,15 +149,24 @@ services:
         condition: service_completed_successfully
     networks:
       - krayin-network
-    # Comando customizado para desabilitar MySQL interno e usar apenas Apache
+    # Comando customizado para usar apenas Apache com banco externo
     command: >
       sh -c "
         echo 'Starting Krayin CRM with external database only...' &&
         
-        # Parar o MySQL interno se estiver rodando
+        # Iniciar supervisor em background
+        supervisord -c /etc/supervisor/conf.d/supervisord.conf &
+        SUPERVISOR_PID=\$! &&
+        
+        # Aguardar supervisor inicializar
+        sleep 5 &&
+        
+        # Parar o MySQL interno
+        echo 'Stopping internal MySQL service...' &&
         supervisorctl stop mysql || true &&
         
-        # Aguardar um pouco para garantir que o banco externo está pronto
+        # Aguardar banco externo estar pronto
+        echo 'Waiting for external database...' &&
         sleep 15 &&
         
         # Verificar conexão com banco externo
@@ -184,10 +192,10 @@ services:
         php /var/www/html/laravel-crm/artisan config:clear &&
         php /var/www/html/laravel-crm/artisan cache:clear &&
         
-        echo 'Starting Apache web server only...' &&
+        echo 'Apache web server running with external database' &&
         
-        # Iniciar supervisor apenas com Apache (sem MySQL)
-        supervisord -c /etc/supervisor/conf.d/supervisord.conf
+        # Aguardar o supervisor em foreground
+        wait \$SUPERVISOR_PID
       "
     healthcheck:
       test: ["CMD", "curl", "-f", "http://localhost:80"]
