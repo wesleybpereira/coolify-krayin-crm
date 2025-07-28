@@ -1,0 +1,100 @@
+# === ARQUIVOS SENSÍVEIS ===
+# Nunca versionar arquivos com senhas reais
+.env.local
+.env.production
+*.key
+*.pem
+*.p12
+secrets/
+.env
+
+# === DOCKER ===
+# Logs e dados dos containers
+docker-compose.override.yml
+.docker/
+docker-logs/
+*.log
+
+# === BACKUP E DADOS ===
+# Backups do banco e uploads
+backups/
+*.sql.gz
+*.tar.gz
+uploads/
+storage/
+mysql-data/
+volumes/
+
+# === SISTEMA OPERACIONAL ===
+# macOS
+.DS_Store
+.AppleDouble
+.LSOverride
+._*
+
+# Windows
+Thumbs.db
+ehthumbs.db
+Desktop.ini
+$RECYCLE.BIN/
+
+# Linux
+*~
+.fuse_hidden*
+.directory
+.Trash-*
+
+# === EDITORES ===
+# VS Code
+.vscode/
+*.code-workspace
+
+# PhpStorm / IntelliJ
+.idea/
+*.iml
+*.ipr
+*.iws
+
+# Vim
+*.swp
+*.swo
+*~
+
+# Emacs
+*~
+\#*\#
+/.emacs.desktop
+/.emacs.desktop.lock
+*.elc
+
+# === TEMPORÁRIOS ===
+# Arquivos temporários
+*.tmp
+*.temp
+*.cache
+.cache/
+temp/
+tmp/
+
+# === ESPECÍFICOS DO KRAYIN ===
+# Arquivos de configuração locais do Laravel/Krayin
+bootstrap/cache/
+storage/app/
+storage/framework/
+storage/logs/
+public/uploads/
+
+# === NODEJS (se usar) ===
+node_modules/
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+.npm
+.yarn-integrity
+
+# === OUTROS ===
+# Arquivos de teste e desenvolvimento
+test-data/
+*.test
+coverage/
+.nyc_output/
