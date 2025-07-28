@@ -154,20 +154,9 @@ services:
       sh -c "
         echo 'Starting Krayin CRM with external database only...' &&
         
-        # Iniciar supervisor em background
-        supervisord -c /etc/supervisor/conf.d/supervisord.conf &
-        SUPERVISOR_PID=\$! &&
-        
-        # Aguardar supervisor inicializar
-        sleep 5 &&
-        
-        # Parar o MySQL interno
-        echo 'Stopping internal MySQL service...' &&
-        supervisorctl stop mysql || true &&
-        
         # Aguardar banco externo estar pronto
         echo 'Waiting for external database...' &&
-        sleep 15 &&
+        sleep 20 &&
         
         # Verificar conexão com banco externo
         echo 'Testing external database connection...' &&
@@ -192,17 +181,17 @@ services:
         php /var/www/html/laravel-crm/artisan config:clear &&
         php /var/www/html/laravel-crm/artisan cache:clear &&
         
-        echo 'Apache web server running with external database' &&
+        echo 'Starting Apache directly without supervisor...' &&
         
-        # Aguardar o supervisor em foreground
-        wait \$SUPERVISOR_PID
+        # Iniciar Apache diretamente em foreground
+        exec apache2ctl -D FOREGROUND
       "
     healthcheck:
-      test: ["CMD", "curl", "-f", "http://localhost:80"]
+      test: ["CMD", "curl", "-f", "http://localhost:80/"] 
       interval: 30s
-      timeout: 10s
-      retries: 3
-      start_period: 60s
+      timeout: 15s
+      retries: 5
+      start_period: 120s
 
 volumes:
   krayin_storage:
