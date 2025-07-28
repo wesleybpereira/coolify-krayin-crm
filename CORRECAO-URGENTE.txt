@@ -1,0 +1,16 @@
+# ⚠️ CONFIGURAÇÃO URGENTE - MySQL falhando!
+
+# No Coolify, substitua TODAS as variáveis por estas:
+
+APP_KEY=base64:dTTkWP2vgh7rs8CtWcw47tdCd7gpMEggdZ5WRwLlHAY=
+APP_URL=https://crm.dachdigital.com.br
+DB_PASSWORD=pefvon-wuMcoz-8qupqe
+MYSQL_ROOT_PASSWORD=RV2yYmv6mxKzIAv
+
+# ❌ REMOVA estas variáveis antigas:
+# DB_HOST=krayin-db (REMOVER - agora é localhost interno)
+# DB_CONNECTION, DB_PORT, DB_DATABASE, DB_USERNAME (já têm padrão no docker-compose)
+
+# 🔧 IMPORTANTE:
+# O MySQL interno está falhando porque as variáveis estão configuradas 
+# para banco externo (krayin-db) mas agora usamos interno (localhost).
