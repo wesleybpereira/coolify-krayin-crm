@@ -12,8 +12,6 @@ services:
       MYSQL_DATABASE: krayin
       MYSQL_USER: krayin
       MYSQL_PASSWORD: ${DB_PASSWORD}
-      # Forçar recriação quando senhas mudarem (opcional)
-      MYSQL_INITDB_SKIP_TZINFO: 1
     volumes:
       - krayin_db_data:/var/lib/mysql
     command: --default-authentication-plugin=mysql_native_password --character-set-server=utf8mb4 --collation-server=utf8mb4_unicode_ci
@@ -75,49 +73,14 @@ services:
         # Parar MySQL interno se estiver rodando
         supervisorctl stop mysql 2>/dev/null || true &&
         
-        # Tentar conectar e resetar senha se necessário
-        echo 'Checking database connection...' &&
-        if ! timeout 10 php /var/www/html/laravel-crm/artisan tinker --execute='
-          try {
-            DB::connection()->getPdo();
-            echo \"Connection OK - using existing credentials\n\";
-          } catch (Exception \$$e) {
-            echo \"Connection failed: \" . \$$e->getMessage() . \"\n\";
-            exit(1);
-          }
-        '; then
-          echo 'Primary connection failed - trying root connection to reset password...' &&
-          timeout 30 php /var/www/html/laravel-crm/artisan tinker --execute='
-            try {
-              // Tentar conectar como root para resetar senha
-              \$$pdo = new PDO(
-                \"mysql:host=krayin-db;port=3306;dbname=krayin\",
-                \"root\",
-                env(\"MYSQL_ROOT_PASSWORD\"),
-                [PDO::ATTR_ERRMODE => PDO::ERRMODE_EXCEPTION]
-              );
-              
-              // Resetar senha do usuário krayin
-              \$$newPassword = env(\"DB_PASSWORD\");
-              \$$pdo->exec(\"ALTER USER '\"'\"'krayin'\"'\"'@'\"'\"'%'\"'\"' IDENTIFIED BY '\"'\"'\" . \$$newPassword . \"'\"'\"'\");
-              \$$pdo->exec(\"FLUSH PRIVILEGES\");
-              echo \"Password reset successful\n\";
-              
-            } catch (Exception \$$e) {
-              echo \"Root connection or password reset failed: \" . \$$e->getMessage() . \"\n\";
-              exit(1);
-            }
-          ' || exit 1
-        fi &&
-        
-        # Verificar conexão final
-        echo 'Testing final connection with updated credentials...' &&
+        # Verificar conexão com banco externo
+        echo 'Testing database connection...' &&
         timeout 30 php /var/www/html/laravel-crm/artisan tinker --execute='
           try {
             DB::connection()->getPdo();
             echo \"Database connection successful\n\";
           } catch (Exception \$$e) {
-            echo \"Final connection failed: \" . \$$e->getMessage() . \"\n\";
+            echo \"Connection failed: \" . \$$e->getMessage() . \"\n\";
             exit(1);
           }
         ' &&
