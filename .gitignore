@@ -98,4 +98,4 @@ test-data/
 *.test
 coverage/
 .nyc_output/
-coolify-env-vars.txt
+/coolify-env-vars.txt
