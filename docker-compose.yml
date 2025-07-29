@@ -97,9 +97,20 @@ services:
           }
         ' &&
         
-        # Executar migrações se necessário
-        echo 'Running migrations...' &&
-        php /var/www/html/laravel-crm/artisan migrate --force &&
+        # Verificar se precisa inicializar (primeira vez)
+        if [ ! -f /var/www/html/laravel-crm/.initialized ]; then
+          echo 'First time setup - running migrations and seeds...' &&
+          php /var/www/html/laravel-crm/artisan migrate --force &&
+          echo 'Running database seeders to create admin user...' &&
+          php /var/www/html/laravel-crm/artisan db:seed --force &&
+          echo 'Creating storage link...' &&
+          php /var/www/html/laravel-crm/artisan storage:link &&
+          touch /var/www/html/laravel-crm/.initialized &&
+          echo 'Initialization complete! Admin user created.'
+        else
+          echo 'Already initialized, skipping seeders.' &&
+          php /var/www/html/laravel-crm/artisan migrate --force
+        fi &&
         
         # Configurar permissões
         chown -R www-data:www-data /var/www/html/laravel-crm/storage &&

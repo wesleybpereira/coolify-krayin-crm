@@ -46,6 +46,11 @@ APP_PORT=8082
 #    - MYSQL_PASSWORD: senha que o MySQL cria para o usuário 'krayin'
 #    - Se forem diferentes, dará erro de autenticação!
 #
+# === CREDENCIAIS PADRÃO KRAYIN ===
+# 📧 Email: admin@example.com
+# 🔑 Senha: admin123
+# (Criadas automaticamente pelos seeders na primeira inicialização)
+#
 # === TROUBLESHOOTING ===
 # ❌ Erro "Access denied" após mudar senhas?
 # 1. PARE a aplicação no Coolify
