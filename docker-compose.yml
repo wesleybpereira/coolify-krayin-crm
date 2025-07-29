@@ -98,14 +98,28 @@ services:
         ' &&
         
         # Verificar se precisa inicializar (primeira vez)
-        if [ ! -f /var/www/html/laravel-crm/.initialized ]; then
+        echo 'Checking if system is already initialized...' &&
+        if ! php /var/www/html/laravel-crm/artisan tinker --execute='
+          try {
+            \$$userCount = DB::table(\"users\")->count();
+            if (\$$userCount > 0) {
+              echo \"System already initialized (\$$userCount users found)\n\";
+              exit(1);
+            } else {
+              echo \"No users found, system needs initialization\n\";
+              exit(0);
+            }
+          } catch (Exception \$$e) {
+            echo \"Tables not found, system needs initialization\n\";
+            exit(0);
+          }
+        '; then
           echo 'First time setup - running migrations and seeds...' &&
           php /var/www/html/laravel-crm/artisan migrate --force &&
           echo 'Running database seeders to create admin user...' &&
           php /var/www/html/laravel-crm/artisan db:seed --force &&
           echo 'Creating storage link...' &&
           php /var/www/html/laravel-crm/artisan storage:link &&
-          touch /var/www/html/laravel-crm/.initialized &&
           echo 'Initialization complete! Admin user created.'
         else
           echo 'Already initialized, skipping seeders.' &&
