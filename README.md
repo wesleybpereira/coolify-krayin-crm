@@ -88,9 +88,9 @@ Volumes persistentes:
 
 > **Redeploy é seguro** - dados são preservados pelos volumes.
 
-# === TROUBLESHOOTING ===
-# ❌ Erro "Access denied" após mudar senhas?
-# 1. PARE a aplicação no Coolify
-# 2. VÁ em "Storages/Volumes" 
-# 3. DELETE o volume "krayin_db_data"
-# 4. REDEPLOY - MySQL será recriado com novas senhas
+## === TROUBLESHOOTING ===
+- ❌ Erro "Access denied" após mudar senhas?
+- 1. PARE a aplicação no Coolify
+- 2. VÁ em "Storages/Volumes" 
+- 3. DELETE o volume "krayin_db_data"
+- 4. REDEPLOY - MySQL será recriado com novas senhas
