@@ -52,20 +52,19 @@ LOG_LEVEL=error
 # === PORTA (OPCIONAL - PODE ALTERAR SE NECESSÁRIO) ===
 APP_PORT=8082
 ```
-# === INSTRUÇÕES ===
-# 1. OBRIGATÓRIO: Gere APP_KEY em https://generate-random.org/laravel-key-generator
-# 2. OBRIGATÓRIO: Substitua "seu-dominio.com.br" pelo seu domínio real
-# 3. OBRIGATÓRIO: Mude "SuaSenhaSegura123" para uma senha forte (min. 12 chars)
-# 4. OBRIGATÓRIO: Mude "OutraSenhaRoot456" para outra senha forte diferente
-# 5. ⚠️ CRÍTICO: DB_PASSWORD e MYSQL_PASSWORD devem ter EXATAMENTE a mesma senha!
-#    - DB_PASSWORD: senha que o Laravel usa para conectar
-#    - MYSQL_PASSWORD: senha que o MySQL cria para o usuário 'krayin'
-#    - Se forem diferentes, dará erro de autenticação!
-#
-# === CREDENCIAIS PADRÃO KRAYIN ===
-# 📧 Email: admin@example.com
-# 🔑 Senha: admin123
-# (Criadas automaticamente pelos seeders na primeira inicialização)
+### === INSTRUÇÕES ===
+1. OBRIGATÓRIO: Gere APP_KEY em https://generate-random.org/laravel-key-generator
+2. OBRIGATÓRIO: Substitua "seu-dominio.com.br" pelo seu domínio real
+3. OBRIGATÓRIO: Mude "SuaSenhaSegura123" para uma senha forte (min. 12 chars)
+4. OBRIGATÓRIO: Mude "OutraSenhaRoot456" para outra senha forte diferente
+5. ⚠️ CRÍTICO: DB_PASSWORD e MYSQL_PASSWORD devem ter EXATAMENTE a mesma senha!
+   - DB_PASSWORD: senha que o Laravel usa para conectar
+   - MYSQL_PASSWORD: senha que o MySQL cria para o usuário 'krayin'
+   - Se forem diferentes, dará erro de autenticação!
+#### === CREDENCIAIS PADRÃO KRAYIN ===
+   - 📧 Email: admin@example.com
+   - 🔑 Senha: admin123
+   - (Criadas automaticamente pelos seeders na primeira inicialização)
 
 ## 🚀 Deploy
 
