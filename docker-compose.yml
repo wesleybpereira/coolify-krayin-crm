@@ -106,14 +106,18 @@ services:
         chmod -R 775 /var/www/html/laravel-crm/storage &&
         
         echo 'Starting Apache...' &&
+        # Configurar ServerName para evitar warning
+        echo 'ServerName localhost' >> /etc/apache2/apache2.conf &&
+        # Garantir que Apache está configurado corretamente
+        apache2ctl configtest &&
         exec apache2ctl -D FOREGROUND
       "
     healthcheck:
-      test: ["CMD", "curl", "-f", "http://localhost:80/"]
-      interval: 30s
-      timeout: 15s
-      retries: 5
-      start_period: 180s
+      test: ["CMD", "curl", "-f", "http://localhost:80/", "--connect-timeout", "5", "--max-time", "10"]
+      interval: 45s
+      timeout: 20s
+      retries: 3
+      start_period: 240s
 
 volumes:
   krayin_storage:
