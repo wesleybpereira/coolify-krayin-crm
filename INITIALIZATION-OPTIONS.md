@@ -14,30 +14,24 @@ Baseado na [documentação oficial do Krayin](https://devdocs.krayincrm.com/2.0/
 1. **Faça o deploy normalmente** com o `docker-compose.yml`
 
 2. **Configure Post Deployment Commands**: 
-   No painel do Coolify, vá em Settings > Advanced e adicione no campo "**Post Deployment Commands**":
+   No painel do Coolify, vá em Settings > Advanced e adicione no campo "**Post Deployment Commands**" (APENAS UMA LINHA):
 
 ```bash
-# Aguardar banco estar pronto
-sleep 30
+sleep 30 && cd /var/www/html/laravel-crm && php artisan krayin-crm:install && chown -R www-data:www-data storage && chmod -R 775 storage && php artisan cache:clear && php artisan storage:link && echo "✅ Krayin CRM configurado!"
+```
 
-# Navegar para diretório da aplicação
-cd /var/www/html/laravel-crm
+**Importante**: O Coolify executa automaticamente com `sh -c`, então cole apenas a linha acima.
 
-# Executar instalação oficial do Krayin
-php artisan krayin-crm:install
+#### 🎛️ Versões alternativas do comando:
 
-# Configurar permissões
-chown -R www-data:www-data storage
-chmod -R 775 storage
+**Versão Mínima** (apenas essencial):
+```bash
+sleep 30 && cd /var/www/html/laravel-crm && php artisan krayin-crm:install && php artisan storage:link
+```
 
-# Limpar cache
-php artisan cache:clear
-php artisan config:clear
-
-# Criar link simbólico
-php artisan storage:link
-
-echo "✅ Krayin CRM configurado com sucesso!"
+**Versão com Debugging** (para troubleshoot):
+```bash
+sleep 30 && cd /var/www/html/laravel-crm && echo "Starting setup..." && php artisan krayin-crm:install && echo "Install done" && chown -R www-data:www-data storage && php artisan storage:link && echo "✅ All done!"
 ```
 
 ### Opção 2: Setup Manual (Alternativa)

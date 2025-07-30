@@ -1,0 +1,14 @@
+# Versões do comando para Post Deployment Commands do Coolify
+# O campo aceita apenas UMA LINHA e executa automaticamente com 'sh -c'
+
+## VERSÃO 1 - Completa (Recomendada)
+sleep 30 && cd /var/www/html/laravel-crm && php artisan krayin-crm:install && chown -R www-data:www-data storage && chmod -R 775 storage && php artisan cache:clear && php artisan storage:link && echo "✅ Krayin CRM configurado!"
+
+## VERSÃO 2 - Mínima (Apenas o essencial)
+sleep 30 && cd /var/www/html/laravel-crm && php artisan krayin-crm:install && php artisan storage:link
+
+## VERSÃO 3 - Com mais verificações
+sleep 30 && cd /var/www/html/laravel-crm && php artisan krayin-crm:install || echo "Install failed" && chown -R www-data:www-data storage && chmod -R 775 storage && php artisan cache:clear && php artisan storage:link && echo "✅ Setup completo!"
+
+## VERSÃO 4 - Debugging (Para troubleshoot)
+sleep 30 && cd /var/www/html/laravel-crm && echo "Starting Krayin setup..." && php artisan krayin-crm:install && echo "Install done" && chown -R www-data:www-data storage && php artisan storage:link && echo "✅ All done!"
