@@ -2,39 +2,69 @@
 
 Baseado na [documentação oficial do Krayin](https://devdocs.krayincrm.com/2.0/introduction/docker.html), este projeto oferece duas abordagens para instalação:
 
-## 🚀 Abordagem Recomendada (Oficial)
+## 🚀 Abordagem Recomendada (Coolify Post-Deploy)
 
-### Opção 1: Deploy Simples + Setup Manual
+### Opção 1: Usando Post Deployment Commands do Coolify
 - **Arquivo**: `docker-compose.yml` (versão limpa)
-- **Pós-instalação**: `post-deploy-setup.sh`
-- **Como usar**:
-  1. Faça deploy no Coolify normalmente
-  2. Após deploy estar funcionando, execute: `./post-deploy-setup.sh`
+- **Setup**: Automático via Coolify
+- **Como usar**: Configure no campo "Post Deployment Commands" do Coolify
 
-### Vantagens:
-- ✅ Segue exatamente a documentação oficial do Krayin
-- ✅ Zero problemas de escape no YAML
-- ✅ Compatível com qualquer versão do Docker/Coolify
-- ✅ Fácil debug e troubleshooting
-- ✅ Usa o comando oficial: `php artisan krayin-crm:install`
+### Instruções para Coolify:
+
+1. **Faça o deploy normalmente** com o `docker-compose.yml`
+
+2. **Configure Post Deployment Commands**: 
+   No painel do Coolify, vá em Settings > Advanced e adicione no campo "**Post Deployment Commands**":
+
+```bash
+# Aguardar banco estar pronto
+sleep 30
+
+# Navegar para diretório da aplicação
+cd /var/www/html/laravel-crm
+
+# Executar instalação oficial do Krayin
+php artisan krayin-crm:install
+
+# Configurar permissões
+chown -R www-data:www-data storage
+chmod -R 775 storage
+
+# Limpar cache
+php artisan cache:clear
+php artisan config:clear
+
+# Criar link simbólico
+php artisan storage:link
+
+echo "✅ Krayin CRM configurado com sucesso!"
+```
+
+### Opção 2: Setup Manual (Alternativa)
+- **Script**: `post-deploy-setup.sh` ou `coolify-post-deploy.sh`
+- **Como usar**: Execute após deploy estar funcionando
+
+### Vantagens da Opção 1:
+- ✅ **Completamente automático** - Zero intervenção manual
+- ✅ **Integrado ao Coolify** - Executa a cada deploy
+- ✅ **Segue documentação oficial** - Usa `php artisan krayin-crm:install`
+- ✅ **Zero problemas** - Executa no contexto correto do container
 
 ## 📋 Instruções de Uso
 
-### 1. Deploy no Coolify:
-- Use o arquivo `docker-compose.yml` atual (versão limpa)
-- Configure as variáveis de ambiente no Coolify
-- Faça o deploy normalmente
+### Para Coolify (Recomendado):
+1. Use o arquivo `docker-compose.yml` atual
+2. Configure as variáveis de ambiente
+3. Adicione os comandos no "Post Deployment Commands"
+4. Faça o deploy - tudo será configurado automaticamente
 
-### 2. Após Deploy:
+### Para uso manual:
 ```bash
-# Execute o script de setup (uma única vez)
+# Após deploy estar funcionando
 ./post-deploy-setup.sh
+# OU
+./coolify-post-deploy.sh (se executar dentro do container)
 ```
-
-### 3. Acesso:
-- **URL**: Seu domínio configurado no Coolify
-- **Admin**: admin@example.com
-- **Senha**: admin123
 
 ## 🔧 Configuração de Variáveis
 
@@ -53,6 +83,11 @@ APP_DEBUG=false
 APP_TIMEZONE=America/Sao_Paulo
 APP_PORT=8082
 ```
+
+## 🎯 Acesso após instalação:
+- **URL**: Seu domínio configurado no Coolify
+- **Admin**: admin@example.com
+- **Senha**: admin123
 
 ## 🔄 Abordagem Alternativa (Para Teste)
 
@@ -79,9 +114,9 @@ docker exec krayin-app php -r "new PDO('mysql:host=krayin-db;dbname=krayin', 'kr
 
 ### Problema: "Storage permissions"
 ```bash
-# Execute manualmente
-docker exec krayin-app chown -R www-data:www-data /var/www/html/laravel-crm/storage
-docker exec krayin-app chmod -R 775 /var/www/html/laravel-crm/storage
+# Execute manualmente no container
+chown -R www-data:www-data /var/www/html/laravel-crm/storage
+chmod -R 775 /var/www/html/laravel-crm/storage
 ```
 
 ## 📚 Documentação Oficial
@@ -93,7 +128,7 @@ docker exec krayin-app chmod -R 775 /var/www/html/laravel-crm/storage
 ## 📁 Arquivos do Projeto
 
 - `docker-compose.yml` - Configuração limpa para Coolify (RECOMENDADO)
-- `docker-compose-official.yml` - Configuração oficial exata da documentação
-- `post-deploy-setup.sh` - Script de setup pós-deploy
-- `setup-krayin.sh` - Script de setup alternativo
-- `init-krayin.sh` - Script de inicialização (não usado na abordagem atual)
+- `coolify-commands.txt` - Comandos para Post Deployment Commands do Coolify
+- `coolify-post-deploy.sh` - Script otimizado para execução no container
+- `post-deploy-setup.sh` - Script para execução externa ao container
+- `docker-compose-official.yml` - Configuração oficial da documentação

@@ -1,0 +1,24 @@
+# Comandos para o campo "Post Deployment Commands" do Coolify
+# Cole estes comandos diretamente no campo do Coolify
+
+# Aguardar banco estar pronto
+sleep 30
+
+# Navegar para diretório da aplicação
+cd /var/www/html/laravel-crm
+
+# Executar instalação oficial do Krayin
+php artisan krayin-crm:install
+
+# Configurar permissões
+chown -R www-data:www-data storage
+chmod -R 775 storage
+
+# Limpar cache
+php artisan cache:clear
+php artisan config:clear
+
+# Criar link simbólico
+php artisan storage:link
+
+echo "✅ Krayin CRM configurado com sucesso!"
