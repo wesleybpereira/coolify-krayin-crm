@@ -60,6 +60,12 @@ services:
       QUEUE_CONNECTION: ${QUEUE_CONNECTION:-database}
       LOG_CHANNEL: ${LOG_CHANNEL:-stack}
       LOG_LEVEL: ${LOG_LEVEL:-error}
+      
+      # API Configuration
+      PASSPORT_PERSONAL_ACCESS_CLIENT_ID: ${PASSPORT_PERSONAL_ACCESS_CLIENT_ID:-1}
+      PASSPORT_PERSONAL_ACCESS_CLIENT_SECRET: ${PASSPORT_PERSONAL_ACCESS_CLIENT_SECRET:-}
+      PASSPORT_PASSWORD_GRANT_CLIENT_ID: ${PASSPORT_PASSWORD_GRANT_CLIENT_ID:-2}
+      PASSPORT_PASSWORD_GRANT_CLIENT_SECRET: ${PASSPORT_PASSWORD_GRANT_CLIENT_SECRET:-}
     depends_on:
       krayin-db:
         condition: service_healthy
@@ -87,6 +93,15 @@ services:
         
         # Verificar conexão com banco externo
         echo 'Testing database connection...' &&
+        
+        # Limpar cache Laravel antes de testar conexão
+        echo 'Clearing Laravel caches...' &&
+        php /var/www/html/laravel-crm/artisan config:clear &&
+        php /var/www/html/laravel-crm/artisan cache:clear &&
+        php /var/www/html/laravel-crm/artisan route:clear &&
+        php /var/www/html/laravel-crm/artisan view:clear &&
+        composer dump-autoload -d /var/www/html/laravel-crm &&
+        
         timeout 30 php /var/www/html/laravel-crm/artisan tinker --execute='
           try {
             DB::connection()->getPdo();
@@ -120,10 +135,14 @@ services:
           php /var/www/html/laravel-crm/artisan db:seed --force &&
           echo 'Creating storage link...' &&
           php /var/www/html/laravel-crm/artisan storage:link &&
-          echo 'Initialization complete! Admin user created.'
+          echo 'Installing API support...' &&
+          php /var/www/html/laravel-crm/artisan passport:install --force &&
+          echo 'Initialization complete! Admin user created with API support.'
         else
           echo 'Already initialized, skipping seeders.' &&
-          php /var/www/html/laravel-crm/artisan migrate --force
+          php /var/www/html/laravel-crm/artisan migrate --force &&
+          echo 'Ensuring API support is configured...' &&
+          php /var/www/html/laravel-crm/artisan passport:keys --force 2>/dev/null || echo 'Passport keys already exist'
         fi &&
         
         # Configurar permissões
