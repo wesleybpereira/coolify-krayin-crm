@@ -48,30 +48,40 @@ services:
         pkill -f mysql 2>/dev/null || true &&
         
         # Testa conexão com banco
-        until php /var/www/html/laravel-crm/artisan migrate:status &>/dev/null; do
+        until php artisan migrate:status &>/dev/null; do
           echo 'Waiting for database...'
           sleep 5
         done &&
         
-        # Limpa cache
-        php /var/www/html/laravel-crm/artisan config:clear &&
-        php /var/www/html/laravel-crm/artisan cache:clear &&
+        # Fix autoloader e limpa cache
+        cd /var/www/html/laravel-crm &&
+        composer dump-autoload --optimize &&
+        php artisan config:clear &&
+        php artisan cache:clear &&
+        php artisan route:clear &&
+        php artisan view:clear &&
         
         # Migrations
-        php /var/www/html/laravel-crm/artisan migrate --force &&
+        php artisan migrate --force &&
         
         # Primeira instalação?
-        if ! php /var/www/html/laravel-crm/artisan tinker --execute='echo DB::table(\"users\")->count() > 0 ? \"exists\" : \"empty\";' 2>/dev/null | grep -q 'exists'; then
+        if ! php artisan tinker --execute='
+          try {
+            echo DB::table(\"users\")->count() > 0 ? \"exists\" : \"empty\";
+          } catch (Exception $e) {
+            echo \"empty\";
+          }
+        ' 2>/dev/null | grep -q 'exists'; then
           echo 'First time setup...' &&
-          php /var/www/html/laravel-crm/artisan db:seed --force &&
-          php /var/www/html/laravel-crm/artisan passport:install --force &&
-          php /var/www/html/laravel-crm/artisan passport:client --personal --no-interaction &&
+          php artisan db:seed --force &&
+          php artisan passport:install --force &&
+          php artisan passport:client --personal --no-interaction &&
           echo 'Setup complete!'
         fi &&
         
         # Storage link e permissões
-        php /var/www/html/laravel-crm/artisan storage:link &&
-        chown -R www-data:www-data /var/www/html/laravel-crm/storage &&
+        php artisan storage:link &&
+        chown -R www-data:www-data storage bootstrap/cache &&
         
         # Inicia Apache
         echo 'ServerName localhost' >> /etc/apache2/apache2.conf &&
