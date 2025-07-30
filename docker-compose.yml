@@ -14,13 +14,11 @@ services:
       MYSQL_PASSWORD: ${DB_PASSWORD}
     volumes:
       - krayin_db_data:/var/lib/mysql
-    command: --default-authentication-plugin=mysql_native_password --character-set-server=utf8mb4 --collation-server=utf8mb4_unicode_ci
+    command: --default-authentication-plugin=mysql_native_password
     healthcheck:
       test: ["CMD", "mysqladmin", "ping", "-h", "localhost", "-u", "krayin", "-p${DB_PASSWORD}"]
       interval: 30s
-      timeout: 10s
-      retries: 10
-      start_period: 60s
+      retries: 5
     networks:
       - krayin-network
 
@@ -36,36 +34,6 @@ services:
     volumes:
       - krayin_storage:/var/www/html/laravel-crm
       - krayin_uploads:/var/www/html/public/uploads
-    environment:
-      # Aplicação
-      APP_KEY: ${APP_KEY}
-      APP_ENV: ${APP_ENV:-production}
-      APP_DEBUG: ${APP_DEBUG:-false}
-      DEBUGBAR_ENABLED: ${DEBUGBAR_ENABLED:-false}
-      APP_URL: ${APP_URL}
-      APP_TIMEZONE: ${APP_TIMEZONE:-America/Sao_Paulo}
-      APP_CIPHER: ${APP_CIPHER:-AES-256-CBC}
-      
-      # Banco externo
-      DB_CONNECTION: mysql
-      DB_HOST: krayin-db
-      DB_PORT: 3306
-      DB_DATABASE: krayin
-      DB_USERNAME: krayin
-      DB_PASSWORD: ${DB_PASSWORD}
-      
-      # Cache e sessão
-      CACHE_DRIVER: ${CACHE_DRIVER:-file}
-      SESSION_DRIVER: ${SESSION_DRIVER:-file}
-      QUEUE_CONNECTION: ${QUEUE_CONNECTION:-database}
-      LOG_CHANNEL: ${LOG_CHANNEL:-stack}
-      LOG_LEVEL: ${LOG_LEVEL:-error}
-      
-      # API Configuration
-      PASSPORT_PERSONAL_ACCESS_CLIENT_ID: ${PASSPORT_PERSONAL_ACCESS_CLIENT_ID:-1}
-      PASSPORT_PERSONAL_ACCESS_CLIENT_SECRET: ${PASSPORT_PERSONAL_ACCESS_CLIENT_SECRET:-}
-      PASSPORT_PASSWORD_GRANT_CLIENT_ID: ${PASSPORT_PASSWORD_GRANT_CLIENT_ID:-2}
-      PASSPORT_PASSWORD_GRANT_CLIENT_SECRET: ${PASSPORT_PASSWORD_GRANT_CLIENT_SECRET:-}
     depends_on:
       krayin-db:
         condition: service_healthy
@@ -73,121 +41,51 @@ services:
       - krayin-network
     command: >
       sh -c "
-        echo 'Waiting for database...' &&
-        sleep 30 &&
+        echo 'Starting Krayin CRM...' &&
+        sleep 20 &&
         
-        # Parar todos os processos MySQL internos
-        echo 'Stopping internal MySQL processes...' &&
+        # Para MySQL interno se existir
         pkill -f mysql 2>/dev/null || true &&
-        pkill -f mysqld 2>/dev/null || true &&
-        supervisorctl stop mysql 2>/dev/null || true &&
-        supervisorctl stop mysqld 2>/dev/null || true &&
-        service mysql stop 2>/dev/null || true &&
-        sleep 5 &&
         
-        # Verificar se MySQL interno ainda está rodando
-        if pgrep -f mysql > /dev/null; then
-          echo 'WARNING: MySQL internal process still running' &&
-          pkill -9 -f mysql 2>/dev/null || true
-        fi &&
+        # Testa conexão com banco
+        until php /var/www/html/laravel-crm/artisan migrate:status &>/dev/null; do
+          echo 'Waiting for database...'
+          sleep 5
+        done &&
         
-        # Verificar conexão com banco externo (sem cache primeiro)
-        echo 'Testing basic database connection...' &&
-        timeout 30 php /var/www/html/laravel-crm/artisan tinker --execute='
-          try {
-            DB::connection()->getPdo();
-            echo \"Database connection successful\n\";
-          } catch (Exception \$$e) {
-            echo \"Connection failed: \" . \$$e->getMessage() . \"\n\";
-            exit(1);
-          }
-        ' &&
+        # Limpa cache
+        php /var/www/html/laravel-crm/artisan config:clear &&
+        php /var/www/html/laravel-crm/artisan cache:clear &&
         
-        # Agora limpar cache com conexão funcionando
-        echo 'Database OK - now clearing Laravel caches safely...' &&
+        # Migrations
+        php /var/www/html/laravel-crm/artisan migrate --force &&
         
-        # Verificar se temos problemas de classe antes de limpar
-        echo 'Checking for class issues...' &&
-        if php /var/www/html/laravel-crm/artisan tinker --execute='
-          try {
-            // Teste simples para ver se o sistema consegue carregar
-            echo \"Laravel bootstrap OK\n\";
-          } catch (Exception \$$e) {
-            echo \"Bootstrap failed: \" . \$$e->getMessage() . \"\n\";
-            exit(1);
-          }
-        '; then
-          echo 'Laravel bootstrap OK, safe to clear caches' &&
-          php /var/www/html/laravel-crm/artisan config:clear 2>/dev/null || true &&
-          php /var/www/html/laravel-crm/artisan cache:clear 2>/dev/null || true &&
-          php /var/www/html/laravel-crm/artisan route:clear 2>/dev/null || true &&
-          php /var/www/html/laravel-crm/artisan view:clear 2>/dev/null || true &&
-          composer dump-autoload -d /var/www/html/laravel-crm 2>/dev/null || true &&
-          echo 'Cache cleared successfully'
-        else
-          echo 'Laravel has bootstrap issues, skipping cache clear for safety' &&
-          composer dump-autoload -d /var/www/html/laravel-crm 2>/dev/null || true
-        fi &&
-        
-        # Verificar se precisa inicializar (primeira vez)
-        echo 'Checking if system is already initialized...' &&
-        if ! php /var/www/html/laravel-crm/artisan tinker --execute='
-          try {
-            \$$userCount = DB::table(\"users\")->count();
-            if (\$$userCount > 0) {
-              echo \"System already initialized (\$$userCount users found)\n\";
-              exit(1);
-            } else {
-              echo \"No users found, system needs initialization\n\";
-              exit(0);
-            }
-          } catch (Exception \$$e) {
-            echo \"Tables not found, system needs initialization\n\";
-            exit(0);
-          }
-        '; then
-          echo 'First time setup - running migrations and seeds...' &&
-          php /var/www/html/laravel-crm/artisan migrate --force &&
-          echo 'Running database seeders to create admin user...' &&
+        # Primeira instalação?
+        if ! php /var/www/html/laravel-crm/artisan tinker --execute='echo DB::table(\"users\")->count() > 0 ? \"exists\" : \"empty\";' 2>/dev/null | grep -q 'exists'; then
+          echo 'First time setup...' &&
           php /var/www/html/laravel-crm/artisan db:seed --force &&
-          echo 'Creating storage link...' &&
-          php /var/www/html/laravel-crm/artisan storage:link &&
-          echo 'Installing API support...' &&
           php /var/www/html/laravel-crm/artisan passport:install --force &&
-          echo 'Initialization complete! Admin user created with API support.'
-        else
-          echo 'Already initialized, skipping seeders.' &&
-          php /var/www/html/laravel-crm/artisan migrate --force &&
-          echo 'Ensuring API support is configured...' &&
-          php /var/www/html/laravel-crm/artisan passport:keys --force 2>/dev/null || echo 'Passport keys already exist'
+          php /var/www/html/laravel-crm/artisan passport:client --personal --no-interaction &&
+          echo 'Setup complete!'
         fi &&
         
-        # Configurar permissões
+        # Storage link e permissões
+        php /var/www/html/laravel-crm/artisan storage:link &&
         chown -R www-data:www-data /var/www/html/laravel-crm/storage &&
-        chmod -R 775 /var/www/html/laravel-crm/storage &&
         
-        echo 'Starting Apache...' &&
-        # Configurar ServerName para evitar warning
+        # Inicia Apache
         echo 'ServerName localhost' >> /etc/apache2/apache2.conf &&
-        # Garantir que Apache está configurado corretamente
-        apache2ctl configtest &&
         exec apache2ctl -D FOREGROUND
       "
     healthcheck:
-      test: ["CMD", "curl", "-f", "http://localhost:80/", "--connect-timeout", "5", "--max-time", "10"]
-      interval: 45s
-      timeout: 20s
-      retries: 3
-      start_period: 240s
+      test: ["CMD", "curl", "-f", "http://localhost/"]
+      interval: 30s
+      start_period: 120s
 
 volumes:
   krayin_storage:
-    driver: local
   krayin_uploads:
-    driver: local
   krayin_db_data:
-    driver: local
 
 networks:
   krayin-network:
-    driver: bridge
