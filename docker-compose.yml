@@ -73,13 +73,13 @@ services:
         # Aguarda banco com teste mais robusto
         max_attempts=30 &&
         attempt=0 &&
-        until php artisan migrate:status &>/dev/null || [ \$attempt -eq \$max_attempts ]; do
-          echo \"Waiting for database... attempt \$((attempt+1))/\$max_attempts\"
+        until php artisan migrate:status &>/dev/null || [ $attempt -eq $max_attempts ]; do
+          echo \"Waiting for database... attempt $((attempt+1))/$max_attempts\"
           sleep 10
-          attempt=\$((attempt+1))
+          attempt=$((attempt+1))
         done &&
         
-        if [ \$attempt -eq \$max_attempts ]; then
+        if [ $attempt -eq $max_attempts ]; then
           echo 'Database connection failed after 30 attempts'
           exit 1
         fi &&
