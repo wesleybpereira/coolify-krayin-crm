@@ -61,7 +61,7 @@ services:
         condition: service_healthy
     networks:
       - krayin-network
-    command: >
+    command: |
       sh -c "
         echo 'Krayin CRM Initialization Started...' &&
         
@@ -75,7 +75,7 @@ services:
           
           # Testar conexão com banco antes de prosseguir
           echo 'Testing database connection...' &&
-          php -r \"try { \\$pdo = new PDO('mysql:host=krayin-db;dbname=${DB_DATABASE:-krayin}', '${DB_USERNAME:-krayin}', '${DB_PASSWORD:-pefvon-wuMcoz-8qupqe}'); echo 'Database connection successful\\n'; } catch(PDOException \\$e) { echo 'Connection failed: ' . \\$e->getMessage() . '\\n'; exit(1); }\" &&
+          php -r "try { \$pdo = new PDO('mysql:host=krayin-db;dbname=${DB_DATABASE:-krayin}', '${DB_USERNAME:-krayin}', '${DB_PASSWORD:-pefvon-wuMcoz-8qupqe}'); echo 'Database connection successful\n'; } catch(PDOException \$e) { echo 'Connection failed: ' . \$e->getMessage() . '\n'; exit(1); }" &&
           
           echo 'Running database migrations...' &&
           php /var/www/html/laravel-crm/artisan migrate --force &&
@@ -94,7 +94,7 @@ services:
           
           # Marcar como inicializado
           touch /var/www/html/laravel-crm/.initialized &&
-          echo 'Krayin CRM initialization completed successfully!' 
+          echo 'Krayin CRM initialization completed successfully!'
         else
           echo 'Krayin CRM already initialized, skipping setup.'
         fi &&
@@ -102,11 +102,11 @@ services:
         echo 'Initialization container finished.'
       "
     healthcheck:
-      test: ["CMD", "echo", "Initialization complete"]
+      test: ["CMD", "test", "-f", "/var/www/html/laravel-crm/.initialized"]
       interval: 10s
       timeout: 5s
       retries: 1
-      start_period: 5s
+      start_period: 120s
     restart: "no"
 
   krayin:
@@ -145,7 +145,7 @@ services:
       krayin-db:
         condition: service_healthy
       krayin-init:
-        condition: service_completed_successfully
+        condition: service_healthy
     networks:
       - krayin-network
     healthcheck:
