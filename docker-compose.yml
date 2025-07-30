@@ -14,11 +14,13 @@ services:
       MYSQL_PASSWORD: ${DB_PASSWORD}
     volumes:
       - krayin_db_data:/var/lib/mysql
-    command: --default-authentication-plugin=mysql_native_password
+    command: --default-authentication-plugin=mysql_native_password --skip-log-bin
     healthcheck:
-      test: ["CMD", "mysqladmin", "ping", "-h", "localhost", "-u", "krayin", "-p${DB_PASSWORD}"]
+      test: ["CMD-SHELL", "mysqladmin ping -h localhost -u root -p${MYSQL_ROOT_PASSWORD} || exit 1"]
       interval: 30s
-      retries: 5
+      timeout: 10s
+      retries: 10
+      start_period: 60s
     networks:
       - krayin-network
 
@@ -31,6 +33,12 @@ services:
       - "coolify.name=Krayin CRM"
     ports:
       - '${APP_PORT:-8082}:80'
+    environment:
+      - DB_HOST=krayin-db
+      - DB_PORT=3306
+      - DB_DATABASE=krayin
+      - DB_USERNAME=krayin
+      - DB_PASSWORD=${DB_PASSWORD}
     volumes:
       - krayin_storage:/var/www/html/laravel-crm
       - krayin_uploads:/var/www/html/public/uploads
@@ -43,7 +51,10 @@ services:
       sh -c "
         echo 'Starting Krayin CRM...' &&
         cd /var/www/html/laravel-crm &&
-        sleep 20 &&
+        
+        # Aguarda mais tempo para o banco ficar totalmente pronto
+        echo 'Waiting for database to be fully ready...' &&
+        sleep 30 &&
         
         # Para MySQL interno se existir
         pkill -f mysql 2>/dev/null || true &&
@@ -59,11 +70,19 @@ services:
         export COMPOSER_ALLOW_SUPERUSER=1 &&
         composer dump-autoload --no-scripts --optimize 2>/dev/null || true &&
         
-        # Aguarda banco
-        until php artisan migrate:status &>/dev/null; do
-          echo 'Waiting for database...'
-          sleep 5
+        # Aguarda banco com teste mais robusto
+        max_attempts=30 &&
+        attempt=0 &&
+        until php artisan migrate:status &>/dev/null || [ \$attempt -eq \$max_attempts ]; do
+          echo \"Waiting for database... attempt \$((attempt+1))/\$max_attempts\"
+          sleep 10
+          attempt=\$((attempt+1))
         done &&
+        
+        if [ \$attempt -eq \$max_attempts ]; then
+          echo 'Database connection failed after 30 attempts'
+          exit 1
+        fi &&
         
         # Limpa cache
         php artisan config:clear &&
@@ -95,7 +114,9 @@ services:
     healthcheck:
       test: ["CMD", "curl", "-f", "http://localhost/"]
       interval: 30s
-      start_period: 120s
+      timeout: 10s
+      start_period: 180s
+      retries: 3
 
 volumes:
   krayin_storage:
