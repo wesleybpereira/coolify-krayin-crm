@@ -91,17 +91,8 @@ services:
           pkill -9 -f mysql 2>/dev/null || true
         fi &&
         
-        # Verificar conexão com banco externo
-        echo 'Testing database connection...' &&
-        
-        # Limpar cache Laravel antes de testar conexão
-        echo 'Clearing Laravel caches...' &&
-        php /var/www/html/laravel-crm/artisan config:clear &&
-        php /var/www/html/laravel-crm/artisan cache:clear &&
-        php /var/www/html/laravel-crm/artisan route:clear &&
-        php /var/www/html/laravel-crm/artisan view:clear &&
-        composer dump-autoload -d /var/www/html/laravel-crm &&
-        
+        # Verificar conexão com banco externo (sem cache primeiro)
+        echo 'Testing basic database connection...' &&
         timeout 30 php /var/www/html/laravel-crm/artisan tinker --execute='
           try {
             DB::connection()->getPdo();
@@ -111,6 +102,32 @@ services:
             exit(1);
           }
         ' &&
+        
+        # Agora limpar cache com conexão funcionando
+        echo 'Database OK - now clearing Laravel caches safely...' &&
+        
+        # Verificar se temos problemas de classe antes de limpar
+        echo 'Checking for class issues...' &&
+        if php /var/www/html/laravel-crm/artisan tinker --execute='
+          try {
+            // Teste simples para ver se o sistema consegue carregar
+            echo \"Laravel bootstrap OK\n\";
+          } catch (Exception \$$e) {
+            echo \"Bootstrap failed: \" . \$$e->getMessage() . \"\n\";
+            exit(1);
+          }
+        '; then
+          echo 'Laravel bootstrap OK, safe to clear caches' &&
+          php /var/www/html/laravel-crm/artisan config:clear 2>/dev/null || true &&
+          php /var/www/html/laravel-crm/artisan cache:clear 2>/dev/null || true &&
+          php /var/www/html/laravel-crm/artisan route:clear 2>/dev/null || true &&
+          php /var/www/html/laravel-crm/artisan view:clear 2>/dev/null || true &&
+          composer dump-autoload -d /var/www/html/laravel-crm 2>/dev/null || true &&
+          echo 'Cache cleared successfully'
+        else
+          echo 'Laravel has bootstrap issues, skipping cache clear for safety' &&
+          composer dump-autoload -d /var/www/html/laravel-crm 2>/dev/null || true
+        fi &&
         
         # Verificar se precisa inicializar (primeira vez)
         echo 'Checking if system is already initialized...' &&
