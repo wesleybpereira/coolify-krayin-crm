@@ -65,52 +65,7 @@ services:
         condition: service_healthy
     networks:
       - krayin-network
-    entrypoint: |
-      #!/bin/sh
-      set -e
-      
-      echo 'Krayin CRM Starting...'
-      
-      # Aguardar banco estar pronto
-      sleep 20
-      
-      # Parar MySQL interno
-      supervisorctl stop mysql 2>/dev/null || true
-      service mysql stop 2>/dev/null || true
-      pkill -f mysql 2>/dev/null || true
-      
-      # Verificar conexão com banco
-      echo 'Testing database connection...'
-      until timeout 10 php /var/www/html/laravel-crm/artisan migrate:status >/dev/null 2>&1; do
-        echo 'Waiting for database...'
-        sleep 5
-      done
-      echo 'Database connected!'
-      
-      # Executar migrações
-      php /var/www/html/laravel-crm/artisan migrate --force
-      
-      # Verificar se precisa executar seeders (primeira instalação)
-      USER_COUNT=$(php /var/www/html/laravel-crm/artisan tinker --execute="echo DB::table('users')->count();" 2>/dev/null | tail -1)
-      if [ "$USER_COUNT" = "0" ] || [ -z "$USER_COUNT" ]; then
-        echo 'First installation - running seeders and API setup...'
-        php /var/www/html/laravel-crm/artisan db:seed --force
-        php /var/www/html/laravel-crm/artisan passport:install --force
-        echo 'Installation complete!'
-      else
-        echo "System already initialized ($USER_COUNT users found)"
-      fi
-      
-      # Configurar storage e permissões
-      php /var/www/html/laravel-crm/artisan storage:link 2>/dev/null || true
-      chown -R www-data:www-data /var/www/html/laravel-crm/storage
-      chmod -R 775 /var/www/html/laravel-crm/storage
-      
-      # Configurar Apache
-      echo 'ServerName localhost' >> /etc/apache2/apache2.conf
-      
-      echo 'Starting Apache...'
-      exec apache2ctl -D FOREGROUND
+    entrypoint: ["/bin/sh", "-c", "echo 'Krayin CRM Starting...' && sleep 20 && supervisorctl stop mysql 2>/dev/null || true && service mysql stop 2>/dev/null || true && pkill -f mysql 2>/dev/null || true && echo 'Testing database connection...' && until timeout 10 php /var/www/html/laravel-crm/artisan migrate:status >/dev/null 2>&1; do echo 'Waiting for database...'; sleep 5; done && echo 'Database connected!' && php /var/www/html/laravel-crm/artisan migrate --force && USER_COUNT=$(php /var/www/html/laravel-crm/artisan tinker --execute=\"echo DB::table('users')->count();\" 2>/dev/null | tail -1) && if [ \"$USER_COUNT\" = \"0\" ] || [ -z \"$USER_COUNT\" ]; then echo 'First installation - running seeders and API setup...' && php /var/www/html/laravel-crm/artisan db:seed --force && php /var/www/html/laravel-crm/artisan passport:install --force && echo 'Installation complete!'; else echo \"System already initialized ($USER_COUNT users found)\"; fi && php /var/www/html/laravel-crm/artisan storage:link 2>/dev/null || true && chown -R www-data:www-data /var/www/html/laravel-crm/storage && chmod -R 775 /var/www/html/laravel-crm/storage && echo 'ServerName localhost' >> /etc/apache2/apache2.conf && echo 'Starting Apache...' && exec apache2ctl -D FOREGROUND"]
     healthcheck:
       test: ["CMD", "curl", "-f", "http://localhost/"]
       interval: 30s
