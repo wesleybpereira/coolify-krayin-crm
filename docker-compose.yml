@@ -74,17 +74,12 @@ services:
         # Migrations
         php artisan migrate --force &&
         
-        # Primeira instalação?
-        USERS_EXIST=false &&
-        if php artisan tinker --execute='echo DB::table(\"users\")->count();' 2>/dev/null | grep -q '[1-9]'; then
-          USERS_EXIST=true
-        fi &&
-        
-        if [ \"\$USERS_EXIST\" = 'false' ]; then
+        # Primeira instalação? (método mais simples)
+        if ! php artisan tinker --execute='echo DB::table(\\\"users\\\")->exists() ? \\\"yes\\\" : \\\"no\\\";' 2>/dev/null | grep -q 'yes'; then
           echo 'First time setup...' &&
           php artisan db:seed --force &&
           php artisan passport:install --force --no-interaction &&
-          php artisan passport:client --personal --no-interaction --name='Krayin Personal Client' &&
+          php artisan passport:client --personal --no-interaction --name=KrayinPersonalClient &&
           echo 'Setup complete!'
         fi &&
         
