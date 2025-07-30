@@ -89,14 +89,14 @@ services:
         php /var/www/html/laravel-crm/artisan migrate --force &&
         
         # Verificar se precisa executar seeders (primeira instalação)
-        USER_COUNT=\$(php /var/www/html/laravel-crm/artisan tinker --execute='echo DB::table(\"users\")->count();' 2>/dev/null | tail -1) &&
+        USER_COUNT=\$(php /var/www/html/laravel-crm/artisan tinker --execute=\"echo DB::table('users')->count();\" 2>/dev/null | tail -1) &&
         if [ \"\$USER_COUNT\" = \"0\" ] || [ -z \"\$USER_COUNT\" ]; then
           echo 'First installation - running seeders and API setup...' &&
           php /var/www/html/laravel-crm/artisan db:seed --force &&
           php /var/www/html/laravel-crm/artisan passport:install --force &&
           echo 'Installation complete!'
         else
-          echo 'System already initialized ('\$USER_COUNT' users found)'
+          echo \"System already initialized (\$USER_COUNT users found)\"
         fi &&
         
         # Configurar storage e permissões
