@@ -1,0 +1,108 @@
+version: '3.8'
+
+services:
+  krayin-app:
+    image: webkul/krayin:${KRAYIN_VERSION:-2.0.1}
+    container_name: krayin_app
+    restart: unless-stopped
+    labels:
+      - "coolify.main=true"
+      - "coolify.name=Krayin CRM"
+    ports:
+      - "${APP_PORT:-8082}:80"
+    volumes:
+      - krayin-app-data:/var/www/html
+    environment:
+      # Application Configuration
+      APP_NAME: ${APP_NAME:-Krayin CRM}
+      APP_ENV: ${APP_ENV:-production}
+      APP_KEY: ${APP_KEY}
+      APP_DEBUG: ${APP_DEBUG:-false}
+      APP_URL: ${APP_URL}
+      APP_TIMEZONE: ${APP_TIMEZONE:-UTC}
+      
+      # Database Configuration
+      DB_CONNECTION: ${DB_CONNECTION:-mysql}
+      DB_HOST: krayin-mysql
+      DB_PORT: ${DB_PORT:-3306}
+      DB_DATABASE: ${DB_DATABASE:-krayin}
+      DB_USERNAME: ${DB_USERNAME:-krayin_user}
+      DB_PASSWORD: ${DB_PASSWORD}
+      
+      # Cache Configuration
+      CACHE_DRIVER: ${CACHE_DRIVER:-file}
+      SESSION_DRIVER: ${SESSION_DRIVER:-file}
+      QUEUE_CONNECTION: ${QUEUE_CONNECTION:-database}
+      
+      # Mail Configuration (opcional)
+      MAIL_MAILER: ${MAIL_MAILER:-smtp}
+      MAIL_HOST: ${MAIL_HOST}
+      MAIL_PORT: ${MAIL_PORT:-587}
+      MAIL_USERNAME: ${MAIL_USERNAME}
+      MAIL_PASSWORD: ${MAIL_PASSWORD}
+      MAIL_ENCRYPTION: ${MAIL_ENCRYPTION:-tls}
+      MAIL_FROM_ADDRESS: ${MAIL_FROM_ADDRESS}
+      MAIL_FROM_NAME: ${MAIL_FROM_NAME:-Krayin CRM}
+      
+      # Log Configuration
+      LOG_CHANNEL: ${LOG_CHANNEL:-stack}
+      LOG_LEVEL: ${LOG_LEVEL:-error}
+    depends_on:
+      krayin-mysql:
+        condition: service_healthy
+    networks:
+      - krayin-network
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:80/"]
+      interval: 30s
+      timeout: 15s
+      retries: 5
+      start_period: 120s
+
+  krayin-mysql:
+    image: mysql:8.0
+    container_name: krayin_mysql
+    restart: unless-stopped
+    labels:
+      - "coolify.exclude=true"
+    environment:
+      MYSQL_ROOT_PASSWORD: ${MYSQL_ROOT_PASSWORD:-root}
+      MYSQL_DATABASE: ${DB_DATABASE:-krayin}
+      MYSQL_USER: ${DB_USERNAME:-krayin_user}
+      MYSQL_PASSWORD: ${DB_PASSWORD}
+    volumes:
+      - krayin-mysql-data:/var/lib/mysql
+    command: --default-authentication-plugin=mysql_native_password --character-set-server=utf8mb4 --collation-server=utf8mb4_unicode_ci
+    healthcheck:
+      test: ["CMD", "mysqladmin", "ping", "-h", "localhost", "-u", "${DB_USERNAME:-krayin_user}", "-p${DB_PASSWORD}"]
+      interval: 30s
+      timeout: 10s
+      retries: 10
+      start_period: 60s
+    networks:
+      - krayin-network
+
+  krayin-phpmyadmin:
+    image: phpmyadmin:latest
+    container_name: krayin_phpmyadmin
+    restart: unless-stopped
+    labels:
+      - "coolify.exclude=true"
+    environment:
+      PMA_HOST: krayin-mysql
+      PMA_USER: ${DB_USERNAME:-krayin_user}
+      PMA_PASSWORD: ${DB_PASSWORD}
+    ports:
+      - "${PHPMYADMIN_PORT:-8080}:80"
+    depends_on:
+      - krayin-mysql
+    networks:
+      - krayin-network
+
+volumes:
+  krayin-app-data:
+  krayin-mysql-data:
+
+networks:
+  krayin-network:
+    driver: bridge

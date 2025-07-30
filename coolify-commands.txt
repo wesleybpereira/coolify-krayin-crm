@@ -1,4 +1,0 @@
-# Comando ÚNICO para o campo "Post Deployment Commands" do Coolify
-# O Coolify executa automaticamente com 'sh -c', então cole apenas esta linha:
-
-sleep 30 && cd /var/www/html/laravel-crm && php artisan krayin-crm:install && chown -R www-data:www-data storage && chmod -R 775 storage && php artisan cache:clear && php artisan storage:link && echo "✅ Krayin CRM configurado!"
