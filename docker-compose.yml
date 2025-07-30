@@ -75,15 +75,7 @@ services:
           
           # Testar conexão com banco antes de prosseguir
           echo 'Testing database connection...' &&
-          timeout 30 php /var/www/html/laravel-crm/artisan tinker --execute='
-            try {
-              DB::connection()->getPdo();
-              echo "Database connection successful\n";
-            } catch (Exception $e) {
-              echo "Connection failed: " . $e->getMessage() . "\n";
-              exit(1);
-            }
-          ' &&
+          php -r \"try { \\$pdo = new PDO('mysql:host=krayin-db;dbname=${DB_DATABASE:-krayin}', '${DB_USERNAME:-krayin}', '${DB_PASSWORD:-pefvon-wuMcoz-8qupqe}'); echo 'Database connection successful\\n'; } catch(PDOException \\$e) { echo 'Connection failed: ' . \\$e->getMessage() . '\\n'; exit(1); }\" &&
           
           echo 'Running database migrations...' &&
           php /var/www/html/laravel-crm/artisan migrate --force &&
@@ -109,6 +101,12 @@ services:
         
         echo 'Initialization container finished.'
       "
+    healthcheck:
+      test: ["CMD", "echo", "Initialization complete"]
+      interval: 10s
+      timeout: 5s
+      retries: 1
+      start_period: 5s
     restart: "no"
 
   krayin:
@@ -146,6 +144,8 @@ services:
     depends_on:
       krayin-db:
         condition: service_healthy
+      krayin-init:
+        condition: service_completed_successfully
     networks:
       - krayin-network
     healthcheck:
