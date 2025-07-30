@@ -42,46 +42,56 @@ services:
     command: >
       sh -c "
         echo 'Starting Krayin CRM...' &&
+        cd /var/www/html/laravel-crm &&
         sleep 20 &&
         
         # Para MySQL interno se existir
         pkill -f mysql 2>/dev/null || true &&
         
-        # Testa conexão com banco
+        # Verifica se artisan existe
+        if [ ! -f artisan ]; then
+          echo 'ERROR: artisan file not found!'
+          ls -la /var/www/html/
+          exit 1
+        fi &&
+        
+        # Fix composer issues
+        export COMPOSER_ALLOW_SUPERUSER=1 &&
+        composer dump-autoload --no-scripts --optimize 2>/dev/null || true &&
+        
+        # Aguarda banco
         until php artisan migrate:status &>/dev/null; do
           echo 'Waiting for database...'
           sleep 5
         done &&
         
-        # Fix autoloader e limpa cache
-        cd /var/www/html/laravel-crm &&
-        composer dump-autoload --optimize &&
+        # Limpa cache
         php artisan config:clear &&
         php artisan cache:clear &&
-        php artisan route:clear &&
-        php artisan view:clear &&
+        php artisan route:clear || true &&
+        php artisan view:clear || true &&
         
         # Migrations
         php artisan migrate --force &&
         
         # Primeira instalação?
-        if ! php artisan tinker --execute='
-          try {
-            echo DB::table(\"users\")->count() > 0 ? \"exists\" : \"empty\";
-          } catch (Exception $e) {
-            echo \"empty\";
-          }
-        ' 2>/dev/null | grep -q 'exists'; then
+        USERS_EXIST=false &&
+        if php artisan tinker --execute='echo DB::table(\"users\")->count();' 2>/dev/null | grep -q '[1-9]'; then
+          USERS_EXIST=true
+        fi &&
+        
+        if [ \"\$USERS_EXIST\" = 'false' ]; then
           echo 'First time setup...' &&
           php artisan db:seed --force &&
-          php artisan passport:install --force &&
-          php artisan passport:client --personal --no-interaction &&
+          php artisan passport:install --force --no-interaction &&
+          php artisan passport:client --personal --no-interaction --name='Krayin Personal Client' &&
           echo 'Setup complete!'
         fi &&
         
         # Storage link e permissões
         php artisan storage:link &&
         chown -R www-data:www-data storage bootstrap/cache &&
+        chmod -R 775 storage bootstrap/cache &&
         
         # Inicia Apache
         echo 'ServerName localhost' >> /etc/apache2/apache2.conf &&
