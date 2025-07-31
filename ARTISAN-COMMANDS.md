@@ -16,7 +16,7 @@ Este comando fará:
 
 ## 📋 Comandos para Post Deployment Commands do Coolify
 
-**Versão Corrigida (RECOMENDADA) - Cria .env interno completo:**
+**Versão Corrigida (RECOMENDADA) - Cria .env interno completo + HTTPS:**
 ```bash
 sleep 30 && cd /var/www/html/laravel-crm && cat > .env << EOF
 APP_NAME=\${APP_NAME:-"Krayin CRM"}
@@ -25,6 +25,8 @@ APP_KEY=\$APP_KEY
 APP_DEBUG=\${APP_DEBUG:-false}
 APP_URL=\$APP_URL
 APP_TIMEZONE=\${APP_TIMEZONE:-UTC}
+FORCE_HTTPS=true
+ASSET_URL=\$APP_URL
 DB_CONNECTION=\${DB_CONNECTION:-mysql}
 DB_HOST=krayin-mysql
 DB_PORT=\${DB_PORT:-3306}
@@ -178,6 +180,8 @@ APP_KEY=$APP_KEY
 APP_DEBUG=${APP_DEBUG:-false}
 APP_URL=$APP_URL
 APP_TIMEZONE=${APP_TIMEZONE:-UTC}
+FORCE_HTTPS=true
+ASSET_URL=$APP_URL
 
 DB_CONNECTION=${DB_CONNECTION:-mysql}
 DB_HOST=krayin-mysql
@@ -201,6 +205,50 @@ cat .env | grep DB_HOST
 # 4. Limpar cache e executar instalação
 php artisan config:clear
 php artisan krayin-crm:install
+```
+
+### Erro: Mixed Content - CSS/JS carregando em HTTP em vez de HTTPS
+```bash
+# PROBLEMA: Assets (CSS/JS) carregando como http:// em vez de https://
+# CAUSA: Laravel não está forçando HTTPS corretamente
+
+# SOLUÇÃO 1 - Adicionar variáveis HTTPS no .env:
+cd /var/www/html/laravel-crm
+echo "FORCE_HTTPS=true" >> .env
+echo "ASSET_URL=$APP_URL" >> .env
+php artisan config:clear
+
+# SOLUÇÃO 2 - Comando completo para recriar .env com HTTPS:
+cat > .env << EOF
+APP_NAME=${APP_NAME:-"Krayin CRM"}
+APP_ENV=${APP_ENV:-production}
+APP_KEY=$APP_KEY
+APP_DEBUG=${APP_DEBUG:-false}
+APP_URL=$APP_URL
+APP_TIMEZONE=${APP_TIMEZONE:-UTC}
+FORCE_HTTPS=true
+ASSET_URL=$APP_URL
+DB_CONNECTION=${DB_CONNECTION:-mysql}
+DB_HOST=krayin-mysql
+DB_PORT=${DB_PORT:-3306}
+DB_DATABASE=${DB_DATABASE:-krayin}
+DB_USERNAME=${DB_USERNAME:-krayin_user}
+DB_PASSWORD=$DB_PASSWORD
+CACHE_DRIVER=${CACHE_DRIVER:-file}
+SESSION_DRIVER=${SESSION_DRIVER:-file}
+QUEUE_CONNECTION=${QUEUE_CONNECTION:-database}
+LOG_CHANNEL=${LOG_CHANNEL:-stack}
+LOG_LEVEL=${LOG_LEVEL:-error}
+EOF
+
+# 3. Limpar todos os caches
+php artisan config:clear
+php artisan cache:clear
+php artisan route:clear
+php artisan view:clear
+
+# 4. Verificar se APP_URL está correto
+php artisan tinker --execute="echo config('app.url');"
 ```
 
 ### Erro: "Access denied for user" ou "localhost"

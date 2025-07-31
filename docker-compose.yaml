@@ -20,6 +20,8 @@ services:
       APP_DEBUG: ${APP_DEBUG:-false}
       APP_URL: ${APP_URL}
       APP_TIMEZONE: ${APP_TIMEZONE:-UTC}
+      FORCE_HTTPS: ${FORCE_HTTPS:-true}
+      ASSET_URL: ${APP_URL}
       
       # Database Configuration
       DB_CONNECTION: ${DB_CONNECTION:-mysql}
