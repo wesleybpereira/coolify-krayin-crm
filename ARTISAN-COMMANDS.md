@@ -16,9 +16,28 @@ Este comando fará:
 
 ## 📋 Comandos para Post Deployment Commands do Coolify
 
-**Versão Corrigida (RECOMENDADA) - Resolve problemas de .env:**
+**Versão Corrigida (RECOMENDADA) - Cria .env interno completo:**
 ```bash
-sleep 30 && cd /var/www/html/laravel-crm && echo "DB_HOST=krayin-mysql" >> .env && echo "DB_PORT=3306" >> .env && echo "DB_DATABASE=${DB_DATABASE:-krayin}" >> .env && echo "DB_USERNAME=${DB_USERNAME:-krayin_user}" >> .env && echo "DB_PASSWORD=${DB_PASSWORD}" >> .env && echo "APP_KEY=${APP_KEY}" >> .env && php artisan config:clear && php artisan krayin-crm:install && chown -R www-data:www-data storage bootstrap/cache && chmod -R 775 storage bootstrap/cache && php artisan storage:link && echo "✅ Krayin CRM configurado!"
+sleep 30 && cd /var/www/html/laravel-crm && cat > .env << EOF
+APP_NAME=\${APP_NAME:-"Krayin CRM"}
+APP_ENV=\${APP_ENV:-production}
+APP_KEY=\$APP_KEY
+APP_DEBUG=\${APP_DEBUG:-false}
+APP_URL=\$APP_URL
+APP_TIMEZONE=\${APP_TIMEZONE:-UTC}
+DB_CONNECTION=\${DB_CONNECTION:-mysql}
+DB_HOST=krayin-mysql
+DB_PORT=\${DB_PORT:-3306}
+DB_DATABASE=\${DB_DATABASE:-krayin}
+DB_USERNAME=\${DB_USERNAME:-krayin_user}
+DB_PASSWORD=\$DB_PASSWORD
+CACHE_DRIVER=\${CACHE_DRIVER:-file}
+SESSION_DRIVER=\${SESSION_DRIVER:-file}
+QUEUE_CONNECTION=\${QUEUE_CONNECTION:-database}
+LOG_CHANNEL=\${LOG_CHANNEL:-stack}
+LOG_LEVEL=\${LOG_LEVEL:-error}
+EOF
+&& php artisan config:clear && php artisan krayin-crm:install && chown -R www-data:www-data storage bootstrap/cache && chmod -R 775 storage bootstrap/cache && php artisan storage:link && echo "✅ Krayin CRM configurado!"
 ```
 
 **Versão Completa Original:**
@@ -126,20 +145,60 @@ Após executar `php artisan krayin-crm:install`:
 
 ## 🚨 Troubleshooting
 
-### Erro: "No APP_KEY variable was found in the .env file"
-```bash
-# 1. Verificar se as variáveis estão no container
+### ❗ PROBLEMA PRINCIPAL: Por que APP_KEY não é reconhecido?
+
+**EXPLICAÇÃO:**
+- ✅ Coolify injeta `APP_KEY` como variável de ambiente no container  
+- ✅ Docker Compose recebe e passa para o container
+- ❌ **MAS** Laravel lê o arquivo `.env` interno, não as variáveis do sistema
+- ❌ O arquivo `.env` dentro do container não é populado automaticamente
+
+**VERIFICAÇÃO:**
+```bash  
+# 1. Dentro do container, verificar se variáveis existem no sistema:
 env | grep APP_KEY
 env | grep DB_
 
-# 2. Se não estiverem, criar/atualizar .env manualmente
-echo "APP_KEY=$APP_KEY" >> .env
-echo "DB_HOST=krayin-mysql" >> .env
-echo "DB_DATABASE=$DB_DATABASE" >> .env
-echo "DB_USERNAME=$DB_USERNAME" >> .env
-echo "DB_PASSWORD=$DB_PASSWORD" >> .env
+# 2. Verificar se existe .env interno (provavelmente NÃO existe ou está vazio):
+cat .env | grep APP_KEY
+```
 
-# 3. Depois executar
+### Erro: "No APP_KEY variable was found in the .env file"
+```bash
+# SOLUÇÃO DEFINITIVA - Criar .env interno com variáveis do sistema:
+
+# 1. Navegar para diretório correto
+cd /var/www/html/laravel-crm
+
+# 2. Criar/popular .env com variáveis de ambiente do sistema
+cat > .env << EOF
+APP_NAME=${APP_NAME:-"Krayin CRM"}
+APP_ENV=${APP_ENV:-production}
+APP_KEY=$APP_KEY
+APP_DEBUG=${APP_DEBUG:-false}
+APP_URL=$APP_URL
+APP_TIMEZONE=${APP_TIMEZONE:-UTC}
+
+DB_CONNECTION=${DB_CONNECTION:-mysql}
+DB_HOST=krayin-mysql
+DB_PORT=${DB_PORT:-3306}
+DB_DATABASE=${DB_DATABASE:-krayin}
+DB_USERNAME=${DB_USERNAME:-krayin_user}
+DB_PASSWORD=$DB_PASSWORD
+
+CACHE_DRIVER=${CACHE_DRIVER:-file}
+SESSION_DRIVER=${SESSION_DRIVER:-file}
+QUEUE_CONNECTION=${QUEUE_CONNECTION:-database}
+
+LOG_CHANNEL=${LOG_CHANNEL:-stack}
+LOG_LEVEL=${LOG_LEVEL:-error}
+EOF
+
+# 3. Verificar se foi criado corretamente
+cat .env | grep APP_KEY
+cat .env | grep DB_HOST
+
+# 4. Limpar cache e executar instalação
 php artisan config:clear
 php artisan krayin-crm:install
 ```
